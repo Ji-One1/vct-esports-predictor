@@ -15,13 +15,11 @@ def evaluate_elo_accuracy(all_series):
         if winner_odds == 0.5:
             continue
         loser_odds = 1 - winner_odds  
-        # Update win count
         if winner_odds > loser_odds:
             win_count += 1
 
         total_count += 1
 
-        # Update Brier Score\
         brier_score += (winner_odds - 1) ** 2
     
     accuracy = win_count / total_count if total_count > 0 else 0

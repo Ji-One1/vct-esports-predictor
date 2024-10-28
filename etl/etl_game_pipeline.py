@@ -11,17 +11,19 @@ engine = create_engine(DATABASE_URI)
 # Path to the mapping data and games folder
 mapping_file_path = 'vct-international/esports-data/mapping_data_v2.json'
 games_folder_path = 'vct-international/games/2024/'
-tournament_id_to_match = "112053360171504305"
+
+tournament_ids_to_match = ["112053399716844250", '112019354266558216', "112053429695970384", '112053368262018629', '111759316711517786', '112053363288959526', '111799864361902547', '112053423967523566', '111878301827183635', '112053442207017566', '112053372791351848', '112053410744354403', '112053360171504305', '111811151250338218', ]
 
 # Step 1: Load mapping data and filter based on tournamentId
 with open(mapping_file_path, 'r') as f:
     mapping_data = json.load(f)
 
 matching_games = []
-for game in mapping_data:
-    if game['tournamentId'] == tournament_id_to_match:
-        platform_game = {"id": game['platformGameId'].replace(':', '_'), "teams": game["teamMapping"] , "tournamentId": game["tournamentId"]}
-        matching_games.append({"game":platform_game, "series_id": game['matchId'], "tournament_id": game['tournamentId']})
+for tournament_id in tournament_ids_to_match:
+    for game in mapping_data:
+        if game['tournamentId'] == tournament_id:
+            platform_game = {"id": game['platformGameId'].replace(':', '_'), "teams": game["teamMapping"] , "tournamentId": game["tournamentId"]}
+            matching_games.append({"game":platform_game, "series_id": game['matchId'], "tournament_id": game['tournamentId']})
 
 # Step 2: Process game files and collect relevant events
 all_games_to_upload = []
@@ -51,15 +53,18 @@ for match in matching_games:
         # Filter for game_decided events
         time_df = df['metadata'].apply(lambda x: x.get("wallTime") if isinstance(x, dict) else None).iloc[-1]
         match_time = datetime.datetime.fromisoformat(time_df[:-1])
-        game_decided_df = df[df['gameDecided'].notna()]
-
+        try:
+            game_decided_df = df[df['gameDecided'].notna()]
+        except:
+            print("FOO Game decided does not exist:", game_file )
+            continue
         # Extract relevant information
         for _, row in game_decided_df.iterrows():
             event = row['gameDecided']
             platform_game_id = row['platformGameId']
             game_state = event["state"]
             if game_state != 'WINNER_DECIDED':
-                print(platform_game_id)
+                print("FOO Game had no winner:", game_file)
                 break
             winning_team = str(event['winningTeam']['value'])
             total_score = event['spikeMode']['currentRound']  
@@ -137,6 +142,5 @@ print(series_df)
 # Step 4: Bulk insert into the database
 games_df.to_sql('games', con=engine, if_exists='append', index=False)
 series_df.to_sql("series", con=engine, if_exists='append', index=False)
-
 
 print("Data uploaded successfully!")
