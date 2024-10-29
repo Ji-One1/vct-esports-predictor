@@ -122,7 +122,7 @@ for series_id, series in all_series.items():
         'date': date,
         'winner': winner,
         'loser': loser,
-        'number of games': series["games"],
+        'number_of_games': series["games"],
         'total_score': overall_total_rounds
         
     })

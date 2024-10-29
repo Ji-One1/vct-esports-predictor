@@ -10,7 +10,6 @@ with open('vct-international/esports-data/tournaments.json', encoding='utf-8') a
 df = pd.DataFrame(tournaments_data)
 selected_columns = ['id', 'league_id', 'name']
 df = df[selected_columns]
-print(df)
 
 # Step 3: Set up the PostgreSQL connection
 db_username = 'postgres'

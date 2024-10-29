@@ -10,7 +10,11 @@ def evaluate_elo_accuracy(all_series):
     total_count = 0
     brier_score = 0.0
 
+    count = 0
     for series in all_series:
+        count += 1
+        if count > 250:
+            continue
         winner_odds = series[0]
         if winner_odds == 0.5:
             continue
@@ -24,7 +28,7 @@ def evaluate_elo_accuracy(all_series):
     
     accuracy = win_count / total_count if total_count > 0 else 0
     avg_brier_score = brier_score / total_count if total_count > 0 else 0
-
+    print(count)
     return accuracy, avg_brier_score
 
 # Example of usage
