@@ -1,9 +1,6 @@
 import psycopg2
 
 def main():
-    all_maps = ['lotus', 'abyss', 'haven', 'sunset', 'split', 'icebox', 'breeze', 'bind', 'ascent']
-
-
     try:
         conn = psycopg2.connect(
             dbname='vct',                  # Your database name
@@ -14,19 +11,6 @@ def main():
         )
 
         with conn.cursor() as cursor:
-            for map in all_maps:
-
-                cursor.execute(f"""
-                ALTER TABLE team_data
-                ADD COLUMN current_elo{map} INT,
-            """)
-                
-            cursor.execute("""
-                ALTER TABLE team_data
-                ADD COLUMN current_elo INT,
-            """)
-            
-
             cursor.execute("""
                 ALTER TABLE series
                 ADD COLUMN winner_elo_before INT,
