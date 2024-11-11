@@ -109,7 +109,7 @@ def process_game(conn, game):
     new_winner_elo, new_loser_elo = update_elo_rating(winning_team_elo, losing_team_elo, S_A, S_B, 1, score)
     winning_team_odds = calculate_expected_score(winning_team_elo, losing_team_elo)
 
-    update_series_elo(conn, game_platform_id, winning_team_elo, losing_team_elo, winning_team_odds)
+    update_game_elo(conn, game_platform_id, winning_team_elo, losing_team_elo, winning_team_odds)
 
     update_current_team_elo_map(conn, winning_team, new_winner_elo, map_name)
     update_current_team_elo_map(conn, losing_team, new_loser_elo, map_name)
