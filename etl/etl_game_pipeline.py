@@ -12,7 +12,8 @@ engine = create_engine(DATABASE_URI)
 mapping_file_path = 'vct-international/esports-data/mapping_data_v2.json'
 games_folder_path = 'vct-international/games/2024/'
 
-tournament_ids_to_match = ["112053399716844250", '112019354266558216', "112053429695970384", '112053368262018629', '111759316711517786', '112053363288959526', '111799864361902547', '112053423967523566', '111878301827183635', '112053442207017566', '112053372791351848', '112053410744354403', '112053360171504305', '111811151250338218', ]
+tournament_ids_to_match = ["112053399716844250", '112019354266558216', "112053429695970384", '112053368262018629', '111759316711517786', '112053363288959526', '111799864361902547', '112053423967523566', '111878301827183635', '112053442207017566', '112053372791351848', '112053410744354403', '112053360171504305', '111811151250338218']
+map_mapper = {"Jam" : "lotus", "Infinity" : "abyss", "Triad": "haven", "Juliett": "sunset", "Bonsai": "split", "Port": "icebox", "Foxtrot": "breeze", "Duality": "bind", "Ascent": "ascent"}
 
 # Step 1: Load mapping data and filter based on tournamentId
 with open(mapping_file_path, 'r') as f:
@@ -21,9 +22,8 @@ with open(mapping_file_path, 'r') as f:
 matching_games = []
 for tournament_id in tournament_ids_to_match:
     for game in mapping_data:
-        if game['tournamentId'] == tournament_id:
-            platform_game = {"id": game['platformGameId'].replace(':', '_'), "teams": game["teamMapping"] , "tournamentId": game["tournamentId"]}
-            matching_games.append({"game":platform_game, "series_id": game['matchId'], "tournament_id": game['tournamentId']})
+        if game['tournamentId'] == tournament_id: #something is wrong here the tournament id is being matched when it shouldnt be
+            matching_games.append({"id":game['platformGameId'].replace(':', '_'), "series_id": game['matchId'],"teams": game["teamMapping"], "tournament_id": game['tournamentId']})
 
 # Step 2: Process game files and collect relevant events
 all_games_to_upload = []
@@ -41,16 +41,20 @@ def calculate_score(score):
 total_games = len(matching_games)
 count = 0
 for match in matching_games:
-    game = match["game"]
     series_id = match["series_id"]
     tournament_id = match["tournament_id"]
-    game_file = os.path.join(games_folder_path, f'{game["id"]}.json')
+    game_file = os.path.join(games_folder_path, f'{match["id"]}.json')
     print()
     if os.path.exists(game_file):
         # Read JSON file into a DataFrame
         df = pd.read_json(game_file)
 
         # Filter for game_decided events
+        selected_map_name = df['configuration'].apply(
+            lambda x: x.get("selectedMap", {}).get("fallback", {}).get("displayName", "") if isinstance(x, dict) else None
+            ).iloc[1]
+        map_name = map_mapper[selected_map_name]
+
         time_df = df['metadata'].apply(lambda x: x.get("wallTime") if isinstance(x, dict) else None).iloc[-1]
         match_time = datetime.datetime.fromisoformat(time_df[:-1])
         try:
@@ -69,7 +73,7 @@ for match in matching_games:
             winning_team = str(event['winningTeam']['value'])
             total_score = event['spikeMode']['currentRound']  
             winning_score, losing_score = calculate_score(total_score)
-            for team, team_id in game["teams"].items():
+            for team, team_id in match["teams"].items():
                 if winning_team != team:
                     losing_team = team_id
                 else: 
@@ -90,6 +94,7 @@ for match in matching_games:
             # Create a dictionary for the event
             all_games_to_upload.append({
                 'platform_game_id': platform_game_id,
+                'map_name' : map_name,
                 'series_id': series_id,
                 'winning_team': winning_team,
                 'losing_team': losing_team,
@@ -101,7 +106,7 @@ for match in matching_games:
             print(f'{count} / {total_games}')
 
     else:
-        print(f"Game file for {game["id"]} not found.")
+        print(f"Game file for {match["id"]} not found.")
 
 
 all_series_to_upload = []
