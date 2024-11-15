@@ -113,6 +113,7 @@ all_series_to_upload = []
 for series_id, series in all_series.items():
     overall_total_rounds = series["total_score"]
     date = series["time"]
+    tournament_id = series["tournament"]
     team1, team2 = series["teams"][0], series["teams"][1]
     if series[team1] > series[team2]:
         winner = team1
