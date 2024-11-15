@@ -5,12 +5,10 @@ def calculate_expected_score(R_A, R_B):
     return 1 / (1 + 10 ** ((R_B - R_A) / 400))
 
 def calculate_mov_multiple(total_score, number_of_games):
-    print(total_score, number_of_games)
     return  (24) /( total_score / number_of_games )
 
 
-def update_elo_rating(rating_a, rating_b, actual_score_a, actual_score_b, number_of_games, total_score):
-    K = 32  # Base K-factor
+def update_elo_rating(rating_a, rating_b, actual_score_a, actual_score_b, number_of_games, total_score, K):
     
     # Calculate expected scores
     expected_a = calculate_expected_score(rating_a, rating_b)
@@ -22,7 +20,6 @@ def update_elo_rating(rating_a, rating_b, actual_score_a, actual_score_b, number
     
     # Define margin of victory multiplier
     mov_multiplier = calculate_mov_multiple(total_score, number_of_games)
-    print(mov_multiplier)
     
     # Adjust Elo changes based on margin of victory
     new_rating_a = rating_a + elo_adjustment_a * mov_multiplier
@@ -83,7 +80,7 @@ def process_series(conn, series_id, winning_team, losing_team, number_of_games, 
     S_A = 1  # Winning team score
     S_B = 0  # Losing team score
 
-    new_winner_elo, new_loser_elo = update_elo_rating(winning_team_elo, losing_team_elo, S_A, S_B, number_of_games, total_score)
+    new_winner_elo, new_loser_elo = update_elo_rating(winning_team_elo, losing_team_elo, S_A, S_B, number_of_games, total_score, 40)
     winning_team_odds = calculate_expected_score(winning_team_elo, losing_team_elo)
 
     update_series_elo(conn, series_id, winning_team_elo, losing_team_elo, winning_team_odds)
@@ -91,13 +88,21 @@ def process_series(conn, series_id, winning_team, losing_team, number_of_games, 
     update_current_team_elo(conn, winning_team, new_winner_elo)
     update_current_team_elo(conn, losing_team, new_loser_elo)
 
-    print(f"Updated {winning_team} rating to {new_winner_elo:.2f}, {losing_team} rating to {new_loser_elo:.2f}.")
+    # print(f"Updated {winning_team} rating to {new_winner_elo:.2f}, {losing_team} rating to {new_loser_elo:.2f}.")
+    return winning_team_elo, losing_team_elo
 
-def process_game(conn, game):
+def combined_elo(team_elo, map_elo, map_elo_worth):
+    return (1 - map_elo_worth) * team_elo + (map_elo_worth) * map_elo
+
+def process_game(conn, game, winning_team_overall_elo, losing_team_overall_elo):
     game_platform_id, map_name, winning_team, losing_team, score  = game
 
-    winning_team_elo = get_current_team_elo_based_on_map(conn, winning_team, map_name)
-    losing_team_elo = get_current_team_elo_based_on_map(conn, losing_team, map_name)
+    winning_team_map_elo = get_current_team_elo_based_on_map(conn, winning_team, map_name)
+    losing_team_map_elo = get_current_team_elo_based_on_map(conn, losing_team, map_name)
+    
+    winning_team_elo = combined_elo(winning_team_overall_elo, winning_team_map_elo, 0.3) 
+    losing_team_elo = combined_elo(losing_team_overall_elo, losing_team_map_elo, 0.3)
+
 
     if winning_team_elo is None or losing_team_elo is None:
         print(f"Rating for {winning_team} or {losing_team} not found.")
@@ -106,15 +111,14 @@ def process_game(conn, game):
     S_A = 1  # Winning team score
     S_B = 0  # Losing team score
 
-    new_winner_elo, new_loser_elo = update_elo_rating(winning_team_elo, losing_team_elo, S_A, S_B, 1, score)
+    new_winner_elo, new_loser_elo = update_elo_rating(winning_team_elo, losing_team_elo, S_A, S_B, 1, score, 40)
     winning_team_odds = calculate_expected_score(winning_team_elo, losing_team_elo)
 
     update_game_elo(conn, game_platform_id, winning_team_elo, losing_team_elo, winning_team_odds)
-
     update_current_team_elo_map(conn, winning_team, new_winner_elo, map_name)
     update_current_team_elo_map(conn, losing_team, new_loser_elo, map_name)
 
-    print(f"Updated {winning_team} rating to {new_winner_elo:.2f}, {losing_team} rating to {new_loser_elo:.2f} on map {map_name}.")
+    # print(f"Updated {winning_team} rating to {new_winner_elo:.2f}, {losing_team} rating to {new_loser_elo:.2f} on map {map_name}.")
 
 
 
@@ -129,7 +133,6 @@ def fetch_games_in_series(conn, series_id):
             cursor.execute(f"SELECT platform_game_id, map_name, winning_team, losing_team, score FROM games WHERE series_id = %s", (series_id,))
             return cursor.fetchall()
 
-# Example usage:
 try:
     conn = psycopg2.connect(
         dbname='vct',                  # Your database name
@@ -145,7 +148,7 @@ try:
     # Loop through each game and process it
     for series in all_series:
         series_id, winner, loser, number_of_games, total_score = series        
-        process_series(
+        winning_team_elo, losing_team_elo = process_series(
             conn,
             series_id=series_id,
             winning_team=winner,
@@ -156,8 +159,9 @@ try:
 
         games = fetch_games_in_series(conn, series_id)
         for game in games:
-            process_game(conn, game)
+            process_game(conn, game, winning_team_elo, losing_team_elo)
 
 finally:
     if conn:
         conn.close()
+    print("ready for evaluation!")
