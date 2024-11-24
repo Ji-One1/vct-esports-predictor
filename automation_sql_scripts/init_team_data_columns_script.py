@@ -1,34 +1,33 @@
 import psycopg2
 
-def main():
+def init_team_data(conn):
     all_maps = ['lotus', 'abyss', 'haven', 'sunset', 'split', 'icebox', 'breeze', 'bind', 'ascent']
 
+    with conn.cursor() as cursor:
+        for map in all_maps:
 
+            cursor.execute(f"""
+            ALTER TABLE team_data
+            ADD COLUMN current_elo_{map} INT;
+            """)
+    
+        cursor.execute("""
+            ALTER TABLE team_data
+            ADD COLUMN current_elo INT,
+        """)
+        conn.commit()
+
+def main():
     try:
         conn = psycopg2.connect(
-            dbname='vct',                  # Your database name
-            user='postgres',          # Replace with your actual username
-            password='5142',      # Replace with your actual password
+            dbname='vct',           
+            user='postgres',         
+            password='5142',      
             host='localhost', 
-            port='5432'                    # Adjust port if necessary
+            port='5432'                    
         )
-
-        with conn.cursor() as cursor:
-            for map in all_maps:
-
-                cursor.execute(f"""
-                ALTER TABLE team_data
-                ADD COLUMN current_elo_{map} INT;
-                """)
-                
-            cursor.execute("""
-                ALTER TABLE team_data
-                ADD COLUMN current_elo INT,
-            """)
+        init_team_data(conn)
         
-            conn.commit()
-
-
     finally:
         if conn:
             conn.close()

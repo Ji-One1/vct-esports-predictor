@@ -1,8 +1,9 @@
 import psycopg2
-from elo_evaluation_for_games import evaluate_elo_accuracy as game_elo_evaluator
-from elo_evaluation_for_series import evaluate_elo_accuracy as series_elo_evaluator
-from elo_evaluation_for_games_as_series import evaluate_elo_accuracy as game_series_elo_evaluator
+from elo_system.elo_evaluation.game_elo_evaluation import evaluate_elo_accuracy as game_elo_evaluator
+from elo_system.elo_evaluation.series_elo_evaluation import evaluate_elo_accuracy as series_elo_evaluator
+from elo_system.elo_evaluation.game_series_elo_evaluation import evaluate_elo_accuracy as game_series_elo_evaluator
 
+#only evaluate tournament once enough training data
 tournaments = {
                 "vct_masters_madrid_2024": "112019354266558216", 
                 "vct_masters_shanghai_2024": "112053399716844250",
@@ -19,9 +20,6 @@ tournaments = {
             #    "vct_cn_stage_2_2024": "112053442207017566",
                "vct_americas_stage_2_2024": "112053410744354403",
                }
-
-
-
 
 def fetch_all_series(conn):
     with conn.cursor() as cursor:
@@ -49,7 +47,6 @@ def main():
         avg_brier_score_series, avg_accuracy_series, avg_log_loss_series = 0, 0 , 0
         avg_accuracy_game_series , avg_brier_score_game_series = 0, 0
 
-        # Fetch games from the database
         all_series = fetch_all_series(conn)
         all_series_for_games = fetch_all_series_for_games(conn)
         for tournament_name, tournament_id in tournaments.items():
@@ -68,6 +65,7 @@ def main():
             avg_brier_score_series += brier_score_series
             avg_accuracy_series += accuracy_series
             total_count += 1
+
             # print(f'TOURNAMENT: {tournament_name}')
             # print(f'SERIES: Accuracy of Elo predictions: {accuracy_series:.2%}')
             # print(f'SERIES: Average Brier Score: {brier_score_series:.4f}')
@@ -84,14 +82,8 @@ def main():
     print(f'GAME: Average accuracy: {avg_accuracy_game/ total_count}')
     print(f'SERIES: Average brier score: {avg_brier_score_series/ total_count}', end=',  ')
     print(f'SERIES: Average accuracy: {avg_accuracy_series/ total_count}', end=',  ')
-    print(f'SERIES: Log Loss: {avg_log_loss_series/ total_count}')
     print(f'GAME SERIES: Average brier score: {avg_brier_score_game_series / total_count}', end=',  ')
     print(f'GAME SERIES: Average accuracy: {avg_accuracy_game_series / total_count}')
-
-
-    # print(f'game elo: {game_beats_series_count}, series elo: {total_count - game_beats_series_count}')
-
-
 
 if __name__ == "__main__":
 

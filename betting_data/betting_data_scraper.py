@@ -2,10 +2,14 @@ import requests
 from bs4 import BeautifulSoup
 import re
 import time
+import psycopg2
 
 tournament_urls = [
-    "https://www.vlr.gg/event/matches/1921/champions-tour-2024-masters-madrid/?series_id=all",
-
+        ("https://www.vlr.gg/event/matches/1999/champions-tour-2024-masters-shanghai/?series_id=all", "112053399716844250"),
+        ("https://www.vlr.gg/event/matches/1921/champions-tour-2024-masters-madrid/?series_id=all", '112019354266558216'),
+        ("https://www.vlr.gg/event/matches/2095/champions-tour-2024-americas-stage-2/?series_id=all", '112053410744354403'),
+        ("https://www.vlr.gg/event/matches/2005/champions-tour-2024-pacific-stage-2/?series_id=all", '112053429695970384'),
+        ("https://www.vlr.gg/event/matches/2094/champions-tour-2024-emea-stage-2/?series_id=all", '112053423967523566')
     ]
 
 def get_games(tournamnet_link):
@@ -54,22 +58,100 @@ def get_bet(game_link):
 
         return {winner_name:odds}
 
-def get_betting_data_by_tournament(tournament_url):
-    print("Loading", end="") 
-    print(".", end="")
+def find_odds(data):
+    bookmaker_margin = 0.07
+    bookmaker_odds = []
+    for game in data:
+        winner = next(iter(game.keys()))
+        winning_team_implied_odds = float(game[winner])
+        losing_team_implied_odds =  1 / ((1 + bookmaker_margin) - 1/ winning_team_implied_odds)
+        
+        bookmaker_odds.append({
+            "winner": winner,
+            "bookmaker_winner_odds": winning_team_implied_odds,
+            "bookmaker_loser_odds": losing_team_implied_odds
+        })
+    
+    return bookmaker_odds
 
-    game_links = get_games(tournament_url)
-    print(".........", end="")
+def matcher(conn, bookmaker_odds, tournament_id):
+   
+    cur = conn.cursor()
+    cur.execute("""
+        SELECT 
+            s.series_id, 
+            MAX(s.date) AS date, 
+            MAX(t.name) AS winner_name, 
+            s.winner, 
+            s.loser
+        FROM 
+            series s
+        JOIN 
+            team_data t ON s.winner = t.id
+        WHERE 
+            s.tournament_id = %s
+        GROUP BY 
+            s.series_id, s.winner, s.loser
+        ORDER BY 
+            MAX(s.date);
+    """, (tournament_id,))
+    series_data = cur.fetchall()
 
+    matched_data = []
+    for i, betting in enumerate(bookmaker_odds):
+        if i < len(series_data): 
+            series_id, series_date, winner, winner_id, loser_id = series_data[i]
+            if not betting['winner'].lower().strip() in winner.lower().strip():
+                print("expected: ", winner.lower().strip(), "/got:", betting['winner'].lower().strip())
+            else:
+                print("worked:", winner)
+                matched_data.append({
+                    "series_id": series_id,
+                    "winner_odds": betting["bookmaker_winner_odds"],
+                    "loser_odds": betting["bookmaker_loser_odds"],
+                    "winner_id": winner_id,
+                    "loser_id": loser_id
+                })
+
+                cur.execute("""
+                    INSERT INTO betting_data (series_id, tournament_id, winner_odds, loser_odds, winner_id, loser_id)
+                    VALUES (%s, %s, %s, %s, %s, %s)
+                """, (
+                    series_id,
+                    tournament_id,
+                    betting["bookmaker_winner_odds"],
+                    betting["bookmaker_loser_odds"],
+                    winner_id,
+                    loser_id
+                ))
+
+    conn.commit() 
+            
+    return matched_data
+
+def upload_betting_data_by_tournament(conn, tournament_url):
+    print("Starting get games")
+    game_links = get_games(tournament_url[0])
     betting_data_ls = []
     for game_link in game_links:
-        print(".", end="")
         time.sleep(2)
-        betting_data = (get_bet(game_link))
+        print("scraping link ", game_link)
+        betting_data = get_bet(game_link)
         if betting_data != None:
             betting_data_ls.append(betting_data)
-    return betting_data_ls
+    print("uploading scraped data")
+    bookmaker_odds_ls = find_odds(betting_data_ls)
+    matcher(conn, bookmaker_odds_ls, tournament_url[1])
 
 
 if __name__ == "__main__":
-    print(get_betting_data_by_tournament("https://www.vlr.gg/event/matches/1921/champions-tour-2024-masters-madrid/?series_id=all"))
+    conn = psycopg2.connect(
+            dbname='vct',                 
+            user='postgres',         
+            password='5142',     
+            host='localhost', 
+            port='5432'        
+        )
+    for tournament_url in tournament_urls:
+        print(upload_betting_data_by_tournament(conn, tournament_url))
+        print(tournament_url[0], "scraped")

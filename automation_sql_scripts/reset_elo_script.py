@@ -10,16 +10,14 @@ def reset_elo(conn):
         conn.commit()
     print("Reset Done!")
 def main():
-    
-
 
     try:
         conn = psycopg2.connect(
-            dbname='vct',                  # Your database name
-            user='postgres',          # Replace with your actual username
-            password='5142',      # Replace with your actual password
+            dbname='vct',    
+            user='postgres',        
+            password='5142',      
             host='localhost', 
-            port='5432'                    # Adjust port if necessary
+            port='5432'                  
         )
 
         reset_elo(conn)

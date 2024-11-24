@@ -1,21 +1,6 @@
 import psycopg2
 from sklearn.metrics import log_loss as sklog_loss
-
-tournaments = {"vct_masters_madrid_2024": "112019354266558216", 
-               "vct_masters_shanghai_2024": "112053399716844250",
-               "vct_pacific_kickoff_2024": "111759316711517786",
-               "vct_emea_kickoff_2024": "111799864361902547",
-               "vct_cn_kickoff_2024" : "111878301827183635",
-               "vct_americas_kickoff_2024": "111811151250338218",
-               "vct_pacific_stage_1_2024": "112053368262018629",
-               "vct_emea_stage_1_2024": "112053363288959526",
-               "vct_cn_stage_1_2024": "112053372791351848",
-               "vct_americas_stage_1_2024": "112053360171504305",
-               "vct_pacific_stage_2_2024": "112053429695970384",
-               "vct_emea_stage_2_2024": "112053423967523566",
-               "vct_cn_stage_2_2024": "112053442207017566",
-               "vct_americas_stage_2_2024": "112053410744354403",
-               }
+from elo_comparison import tournaments
 
 def fetch_all_series(conn):
     with conn.cursor() as cursor:
@@ -69,7 +54,10 @@ def evaluate_elo_accuracy(conn, all_series_id, tournament, map_to_match):
     avg_brier_score = brier_score / total_count if total_count > 0 else 0
     return accuracy, avg_brier_score, total_games , high_win_count, total_high_win_count, 
 
-# Example of usage
+
+
+
+
 def main():
     try:
         conn = psycopg2.connect(
