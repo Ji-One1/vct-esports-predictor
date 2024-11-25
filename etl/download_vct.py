@@ -12,7 +12,7 @@ S3_BUCKET_URL = "https://vcthackathon-data.s3.us-west-2.amazonaws.com"
 LEAGUE = "vct-international"
 
 # (2022, 2023, 2024)
-YEAR = 2024
+YEAR = 2023
 
 def sanitize_filename(file_name):
     """Sanitize file names to replace restricted characters for local saving."""
@@ -52,7 +52,7 @@ def download_esports_files():
         os.makedirs(directory)
 
     esports_data_files = ["leagues", "tournaments",
-                          "players", "teams", "mapping_data"]
+                          "players", "teams", "mapping_data_v2"]
     for file_name in esports_data_files:
         download_gzip_and_write_to_json(f"{directory}/{file_name}")
 
@@ -60,7 +60,7 @@ def download_esports_files():
 def download_games():
     start_time = time.time()
 
-    local_mapping_file = f"{LEAGUE}/esports-data/mapping_data.json"
+    local_mapping_file = f"{LEAGUE}/esports-data/mapping_data_v2.json"
     with open(local_mapping_file, "r") as json_file:
         mappings_data = json.load(json_file)
 

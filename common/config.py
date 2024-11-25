@@ -1,0 +1,5 @@
+db_username = 'postgres'
+db_password = '5142'
+db_host = 'localhost'
+db_port = '5432'
+db_name = 'vct'

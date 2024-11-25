@@ -1,4 +1,5 @@
 import psycopg2
+import config
 from sklearn.metrics import log_loss as sklog_loss
 from elo_comparison import tournaments
 
@@ -61,11 +62,11 @@ def evaluate_elo_accuracy(conn, all_series_id, tournament, map_to_match):
 def main():
     try:
         conn = psycopg2.connect(
-            dbname='vct',                  # Your database name
-            user='postgres',          # Replace with your actual username
-            password='5142',      # Replace with your actual password
-            host='localhost', 
-            port='5432'                    # Adjust port if necessary
+            dbname=config.db_name,       
+            user=config.db_username,         
+            password=config.db_password,      
+            host=config.db_host, 
+            port=config.db_port     
         )
         
         # Fetch games from the database

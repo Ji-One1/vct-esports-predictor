@@ -1,4 +1,5 @@
 import psycopg2
+import common.config as config
 from elo_system.elo_evaluation.game_elo_evaluation import evaluate_elo_accuracy as game_elo_evaluator
 from elo_system.elo_evaluation.series_elo_evaluation import evaluate_elo_accuracy as series_elo_evaluator
 from elo_system.elo_evaluation.game_series_elo_evaluation import evaluate_elo_accuracy as game_series_elo_evaluator
@@ -35,11 +36,11 @@ def fetch_all_series_for_games(conn):
 def main():
     try:
         conn = psycopg2.connect(
-            dbname='vct',                  # Your database name
-            user='postgres',          # Replace with your actual username
-            password='5142',      # Replace with your actual password
-            host='localhost', 
-            port='5432'                    # Adjust port if necessary
+            dbname=config.db_name,       
+            user=config.db_username,         
+            password=config.db_password,      
+            host=config.db_host, 
+            port=config.db_port       
         )
         game_beats_series_count = 0
         total_count = 0

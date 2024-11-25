@@ -1,4 +1,5 @@
 import psycopg2
+import config
 
 def init_elo_columns(conn):
 
@@ -22,11 +23,11 @@ def init_elo_columns(conn):
 def main():
     try:
         conn = psycopg2.connect(
-                dbname='vct',            
-                user='postgres',        
-                password='5142',     
-                host='localhost', 
-                port='5432'                    
+            dbname=config.db_name,       
+            user=config.db_username,         
+            password=config.db_password,      
+            host=config.db_host, 
+            port=config.db_port                       
             )
         init_elo_columns(conn)
         

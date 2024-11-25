@@ -3,9 +3,9 @@ import json
 import pandas as pd
 from sqlalchemy import create_engine
 import datetime
+import config
 
 DATABASE_URI = 'postgresql://postgres:5142@localhost:5432/vct'
-tournament_ids_to_match = ["112053399716844250", '112019354266558216', "112053429695970384", '112053368262018629', '111759316711517786', '112053363288959526', '111799864361902547', '112053423967523566', '111878301827183635', '112053442207017566', '112053372791351848', '112053410744354403', '112053360171504305', '111811151250338218']
 
 def load_game_files( tournament_ids_to_match):
    
@@ -14,11 +14,11 @@ def load_game_files( tournament_ids_to_match):
 
     with open(mapping_file_path, 'r') as f:
         mapping_data = json.load(f)
-
     matching_games = []
     for tournament_id in tournament_ids_to_match:
         for game in mapping_data:
             if game['tournamentId'] == tournament_id:
+                print("FOOOOOO")
                 matching_games.append({"id":game['platformGameId'].replace(':', '_'), "series_id": game['matchId'],"teams": game["teamMapping"], "tournament_id": game['tournamentId']})
 
     return matching_games
@@ -32,13 +32,15 @@ def calculate_score(score):
             loser_score = (score - 2) // 2
             return winner_score, loser_score
 
-def trasform_and_load_games(db_username, db_password, db_host, db_port, db_name, matching_games):
+def trasform_and_load_games(db_username, db_password, db_host, db_port, db_name, matching_games, YEAR):
 
-    games_folder_path = 'vct-international/games/2024/'
-    map_mapper = {"Jam" : "lotus", "Infinity" : "abyss", "Triad": "haven", "Juliett": "sunset", "Bonsai": "split", "Port": "icebox", "Foxtrot": "breeze", "Duality": "bind", "Ascent": "ascent"}
+    games_folder_path = f'vct-international/games/{YEAR}/'
+    map_mapper = {"Jam" : "lotus", "Infinity" : "abyss", "Triad": "haven", "Juliett": "sunset", "Bonsai": "split", "Port": "icebox", "Foxtrot": "breeze", "Duality": "bind", "Ascent": "ascent", "Pitt": "pearl", "Canyon": "fracture"}
+
 
     connection_string = f'postgresql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}'
     engine = create_engine(connection_string)
+    print("connected to db")
     total_games = len(matching_games)
     
     all_games_to_upload = []
@@ -54,6 +56,8 @@ def trasform_and_load_games(db_username, db_password, db_host, db_port, db_name,
             selected_map_name = df['configuration'].apply(
                 lambda x: x.get("selectedMap", {}).get("fallback", {}).get("displayName", "") if isinstance(x, dict) else None
                 ).iloc[1]
+            if selected_map_name not in map_mapper.keys():
+                print(selected_map_name, "not in mapper", "series ID: ", series_id)
             map_name = map_mapper[selected_map_name]
 
             time_df = df['metadata'].apply(lambda x: x.get("wallTime") if isinstance(x, dict) else None).iloc[-1]
@@ -116,9 +120,12 @@ def trasform_and_load_games(db_username, db_password, db_host, db_port, db_name,
         if series[team1] > series[team2]:
             winner = team1
             loser = team2
-        else:
+        elif series[team1] < series[team2]:
             winner = team2
             loser = team1
+        else:
+            winner = "draw"
+            loser = "draw"
         
         all_series_to_upload.append({
             'series_id': series_id,
@@ -141,9 +148,15 @@ def trasform_and_load_games(db_username, db_password, db_host, db_port, db_name,
 
     print("Game Data uploaded successfully!")
 
-def etl_games(db_username, db_password, db_host, db_port, db_name):
-    matching_games = load_game_files()
-    trasform_and_load_games(db_username, db_password, db_host, db_port, db_name, matching_games)
+def etl_games(db_username, db_password, db_host, db_port, db_name, tournament_ids, YEAR):
+    matching_games = load_game_files(tournament_ids)
+    print(matching_games)
+    trasform_and_load_games(db_username, db_password, db_host, db_port, db_name, matching_games, YEAR)
 
 if __name__ == '__main__':
-    etl_games(db_username = 'postgres', db_password = '5142', db_host = 'localhost', db_port = '5432', db_name = 'vct')
+    db_username = config.db_username
+    db_password = config.db_password
+    db_host = config.db_host
+    db_port = config.db_port
+    db_name = config.db_name
+    etl_games(db_username , db_password , db_host, db_port, db_name, tournament_ids= {"hello":"110551570691955817"}.values(),YEAR= 2024)

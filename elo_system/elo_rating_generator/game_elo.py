@@ -42,6 +42,7 @@ def update_current_team_elo_map(conn, team_id, new_rating, map):
         conn.commit()
 
 def combined_elo(team_elo, map_elo, map_elo_worth):
+    print(team_elo, map_elo, map_elo_worth)
     return (1 - map_elo_worth) * team_elo + (map_elo_worth) * map_elo
 
 def process_game(conn, game, winning_team_overall_elo, losing_team_overall_elo):

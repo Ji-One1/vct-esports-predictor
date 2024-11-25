@@ -1,6 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 import json
+import config
 
 def etl_teams(db_username, db_password, db_host, db_port, db_name):
     with open('vct-international/esports-data/teams.json') as f:
@@ -18,4 +19,10 @@ def etl_teams(db_username, db_password, db_host, db_port, db_name):
     print("Team data uploaded successfully!")
 
 if __name__ == '__main__':
-    etl_teams(db_username = 'postgres', db_password = '5142', db_host = 'localhost', db_port = '5432', db_name = 'vct')
+    db_username = config.db_username
+    db_password = config.db_password
+    db_host = config.db_host
+    db_port = config.db_port
+    db_name = config.db_name
+
+    etl_teams(db_username , db_password , db_host , db_port , db_name )

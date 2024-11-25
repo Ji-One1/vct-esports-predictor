@@ -1,5 +1,6 @@
 import psycopg2
-all_maps = ['lotus', 'abyss', 'haven', 'sunset', 'split', 'icebox', 'breeze', 'bind', 'ascent']
+import common.config as config
+all_maps = ['lotus', 'abyss', 'haven', 'sunset', 'split', 'icebox', 'breeze', 'bind', 'ascent', 'fracture', 'pearl']
 
 def reset_elo(conn):
     with conn.cursor() as cursor:
@@ -13,11 +14,11 @@ def main():
 
     try:
         conn = psycopg2.connect(
-            dbname='vct',    
-            user='postgres',        
-            password='5142',      
-            host='localhost', 
-            port='5432'                  
+            dbname=config.db_name,       
+            user=config.db_username,         
+            password=config.db_password,      
+            host=config.db_host, 
+            port=config.db_port                    
         )
 
         reset_elo(conn)

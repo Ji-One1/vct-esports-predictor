@@ -1,5 +1,8 @@
 import psycopg2
 from betting_games_selector import find_betworthy_games
+import common.config as config
+from betting_data_scraper import tournament_url_2023
+
 
 def simulate_betting(tournaments_to_check):
     total_bets = 0
@@ -45,10 +48,11 @@ def simulate_betting(tournaments_to_check):
 
 if __name__ == "__main__":
     conn = psycopg2.connect(
-        dbname="vct",
-        user="postgres",
-        password="5142",
-        host="localhost"
+            dbname=config.db_name,       
+            user=config.db_username,         
+            password=config.db_password,      
+            host=config.db_host, 
+            port=config.db_port     
         )
-    tournaments_to_check = find_betworthy_games(conn, ["112053399716844250"])
+    tournaments_to_check = find_betworthy_games(conn, [item[1] for item in tournament_url_2023])
     simulate_betting(tournaments_to_check)

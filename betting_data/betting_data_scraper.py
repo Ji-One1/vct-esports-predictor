@@ -3,14 +3,22 @@ from bs4 import BeautifulSoup
 import re
 import time
 import psycopg2
+import common.config as config
 
-tournament_urls = [
+tournament_urls_2024 = [
         ("https://www.vlr.gg/event/matches/1999/champions-tour-2024-masters-shanghai/?series_id=all", "112053399716844250"),
         ("https://www.vlr.gg/event/matches/1921/champions-tour-2024-masters-madrid/?series_id=all", '112019354266558216'),
         ("https://www.vlr.gg/event/matches/2095/champions-tour-2024-americas-stage-2/?series_id=all", '112053410744354403'),
         ("https://www.vlr.gg/event/matches/2005/champions-tour-2024-pacific-stage-2/?series_id=all", '112053429695970384'),
         ("https://www.vlr.gg/event/matches/2094/champions-tour-2024-emea-stage-2/?series_id=all", '112053423967523566')
     ]
+
+tournament_url_2023 = [
+        ("https://www.vlr.gg/event/matches/1657/valorant-champions-2023/?series_id=all", "110551570691955817"),
+        ("https://www.vlr.gg/event/matches/1494/champions-tour-2023-masters-tokyo/?series_id=2857", "110445180514540816"),
+        ("https://www.vlr.gg/event/matches/1494/champions-tour-2023-masters-tokyo/?series_id=3154", "110445220928609427"), 
+    ]
+
 
 def get_games(tournamnet_link):
     url = tournamnet_link
@@ -71,7 +79,7 @@ def find_odds(data):
             "bookmaker_winner_odds": winning_team_implied_odds,
             "bookmaker_loser_odds": losing_team_implied_odds
         })
-    
+    print("bookmaker odds:", bookmaker_odds)
     return bookmaker_odds
 
 def matcher(conn, bookmaker_odds, tournament_id):
@@ -96,7 +104,7 @@ def matcher(conn, bookmaker_odds, tournament_id):
             MAX(s.date);
     """, (tournament_id,))
     series_data = cur.fetchall()
-
+    print(series_data)
     matched_data = []
     for i, betting in enumerate(bookmaker_odds):
         if i < len(series_data): 
@@ -146,12 +154,12 @@ def upload_betting_data_by_tournament(conn, tournament_url):
 
 if __name__ == "__main__":
     conn = psycopg2.connect(
-            dbname='vct',                 
-            user='postgres',         
-            password='5142',     
-            host='localhost', 
-            port='5432'        
+            dbname=config.db_name,       
+            user=config.db_username,         
+            password=config.db_password,      
+            host=config.db_host, 
+            port=config.db_port       
         )
-    for tournament_url in tournament_urls:
+    for tournament_url in tournament_url_2023:
         print(upload_betting_data_by_tournament(conn, tournament_url))
         print(tournament_url[0], "scraped")

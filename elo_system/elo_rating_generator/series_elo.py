@@ -46,6 +46,7 @@ def update_current_team_elo(conn, team_id, new_rating):
 
 
 def process_series(conn, series_id, winning_team, losing_team, number_of_games, total_score):
+    
     winning_team_elo = get_current_team_elo(conn, winning_team)
     losing_team_elo = get_current_team_elo(conn, losing_team)
 

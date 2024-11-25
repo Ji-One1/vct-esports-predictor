@@ -1,6 +1,5 @@
 import psycopg2
-import json
-from betting_data_scraper import upload_betting_data_by_tournament
+import common.config as config
 
 def get_model_odds(conn, series_id):
     cur = conn.cursor()
@@ -12,7 +11,7 @@ def get_model_odds(conn, series_id):
         WHERE 
             series_id = %s
 
-    """, (series_id,))
+    """, (str(series_id),))
     winner_odds = cur.fetchall()
     loser_odds = 1 - winner_odds[0][0]
     return (winner_odds[0][0], loser_odds)
@@ -45,8 +44,8 @@ def fetch_matched_data_by_tournament(conn, tournament_id):
     for row in rows:
         matched_data.append({
             "series_id": row[0],
-            "winner_odds": float(row[2]),
-            "loser_odds": float(row[3]),
+            "winner_odds": row[2],
+            "loser_odds": row[3],
             "winner_id": row[4],
             "loser_id": row[5],
         })
@@ -83,9 +82,10 @@ def find_betworthy_games(conn, tournament_ids):
 
 if __name__ == "__main__":
     conn = psycopg2.connect(
-        dbname="vct",
-        user="postgres",
-        password="5142",
-        host="localhost"
+            dbname=config.db_name,       
+            user=config.db_username,         
+            password=config.db_password,      
+            host=config.db_host, 
+            port=config.db_port     
         )
     print(find_betworthy_games(conn, ["112053399716844250"]))
