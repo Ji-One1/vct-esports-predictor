@@ -1,7 +1,24 @@
 import psycopg2
 import common.config as config
-from sklearn.metrics import log_loss as sklog_loss
-from elo_comparison import tournaments
+
+
+tournaments = {
+                "vct_masters_madrid_2024": "7fd5c3a4-d073-4e1d-bfdb-add82557815b", 
+                "vct_masters_shanghai_2024": "2d376181-1802-40dc-adfe-2168af18377c",
+            #    "vct_pacific_kickoff_2024": "111759316711517786",
+            #    "vct_emea_kickoff_2024": "6e814fb8-28e6-4254-a2e0-c7552b39fe45",
+            #    "vct_cn_kickoff_2024" : "111878301827183635",
+            #    "vct_americas_kickoff_2024": "111811151250338218",
+            #    "vct_pacific_stage_1_2024": "112053368262018629",
+            #    "vct_emea_stage_1_2024": "112053363288959526",
+            #    "vct_cn_stage_1_2024": "112053372791351848",
+            #    "vct_americas_stage_1_2024": "112053360171504305",
+               "vct_pacific_stage_2_2024": "801e8d09-0af7-48a1-9b4a-16c2988bbff6",
+               "vct_emea_stage_2_2024": "f140a8d7-75c6-4379-bcaa-2f8efcfb4f9f",
+               "vct_cn_stage_2_2024": "4de6e300-3680-487b-86b0-2a889a5e4334",
+               "vct_americas_stage_2_2024": "a16517c4-7b41-493d-acb5-5856cf2870b0",
+               "Valorant Champions 2024": "7d863dba-de10-4c6c-b9db-738b1944edae"
+               }
 
 def fetch_all_series(conn):
     with conn.cursor() as cursor:
@@ -13,8 +30,6 @@ def fetch_all_games_by_series(conn, series_id):
         cursor.execute("SELECT winning_team_odds, map_name FROM games WHERE series_id = %s", (series_id,))
         return cursor.fetchall()
     
-
-# i need to do it this was for order 
 
 def evaluate_elo_accuracy(conn, all_series_id, tournament, map_to_match):
     win_count = 0
