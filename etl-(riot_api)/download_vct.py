@@ -12,7 +12,7 @@ S3_BUCKET_URL = "https://vcthackathon-data.s3.us-west-2.amazonaws.com"
 LEAGUE = "vct-international"
 
 # (2022, 2023, 2024)
-YEAR = 2023
+YEAR = 2022
 
 def sanitize_filename(file_name):
     """Sanitize file names to replace restricted characters for local saving."""

@@ -1,5 +1,5 @@
 import psycopg2
-import config
+import common.config as config
 from sklearn.metrics import log_loss as sklog_loss
 from elo_comparison import tournaments
 
@@ -54,9 +54,6 @@ def evaluate_elo_accuracy(conn, all_series_id, tournament, map_to_match):
     accuracy = win_count / total_count if total_count > 0 else 0
     avg_brier_score = brier_score / total_count if total_count > 0 else 0
     return accuracy, avg_brier_score, total_games , high_win_count, total_high_win_count, 
-
-
-
 
 
 def main():

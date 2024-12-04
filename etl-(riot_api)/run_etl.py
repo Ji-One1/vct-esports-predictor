@@ -3,9 +3,9 @@ from etl_modules.etl_players import etl_players
 from etl_modules.etl_teams import etl_teams
 from etl_modules.etl_tournaments import etl_tournaments
 from download_vct import YEAR
-import config
+import common.config as config
+from common.config import tournaments
 
-tournaments = {"vct_emea_2023": "109711321498527756", "lock_in_brazil_2023": "109710937834457925", "vct_masters_2023_groups": "110445180514540816", "vct_masters_2023_playoffs": "110445220928609427", "vct_pacific_2023": "109999128956889858", "vct_americas_2023": "109974888242063857", "vct_champions_2023": "110551570691955817"}
 
 def run_etl(db_username, db_password, db_host, db_port, db_name, tournament_ids):
 

@@ -3,7 +3,7 @@ import json
 import pandas as pd
 from sqlalchemy import create_engine
 import datetime
-import config
+import common.config as config
 
 DATABASE_URI = 'postgresql://postgres:5142@localhost:5432/vct'
 
@@ -36,7 +36,6 @@ def trasform_and_load_games(db_username, db_password, db_host, db_port, db_name,
 
     games_folder_path = f'vct-international/games/{YEAR}/'
     map_mapper = {"Jam" : "lotus", "Infinity" : "abyss", "Triad": "haven", "Juliett": "sunset", "Bonsai": "split", "Port": "icebox", "Foxtrot": "breeze", "Duality": "bind", "Ascent": "ascent", "Pitt": "pearl", "Canyon": "fracture"}
-
 
     connection_string = f'postgresql://{db_username}:{db_password}@{db_host}:{db_port}/{db_name}'
     engine = create_engine(connection_string)
@@ -150,7 +149,6 @@ def trasform_and_load_games(db_username, db_password, db_host, db_port, db_name,
 
 def etl_games(db_username, db_password, db_host, db_port, db_name, tournament_ids, YEAR):
     matching_games = load_game_files(tournament_ids)
-    print(matching_games)
     trasform_and_load_games(db_username, db_password, db_host, db_port, db_name, matching_games, YEAR)
 
 if __name__ == '__main__':

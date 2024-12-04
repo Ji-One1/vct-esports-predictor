@@ -4,20 +4,8 @@ import re
 import time
 import psycopg2
 import common.config as config
+from common.config import tournament_url
 
-tournament_urls_2024 = [
-        ("https://www.vlr.gg/event/matches/1999/champions-tour-2024-masters-shanghai/?series_id=all", "112053399716844250"),
-        ("https://www.vlr.gg/event/matches/1921/champions-tour-2024-masters-madrid/?series_id=all", '112019354266558216'),
-        ("https://www.vlr.gg/event/matches/2095/champions-tour-2024-americas-stage-2/?series_id=all", '112053410744354403'),
-        ("https://www.vlr.gg/event/matches/2005/champions-tour-2024-pacific-stage-2/?series_id=all", '112053429695970384'),
-        ("https://www.vlr.gg/event/matches/2094/champions-tour-2024-emea-stage-2/?series_id=all", '112053423967523566')
-    ]
-
-tournament_url_2023 = [
-        ("https://www.vlr.gg/event/matches/1657/valorant-champions-2023/?series_id=all", "110551570691955817"),
-        ("https://www.vlr.gg/event/matches/1494/champions-tour-2023-masters-tokyo/?series_id=2857", "110445180514540816"),
-        ("https://www.vlr.gg/event/matches/1494/champions-tour-2023-masters-tokyo/?series_id=3154", "110445220928609427"), 
-    ]
 
 
 def get_games(tournamnet_link):
@@ -160,6 +148,6 @@ if __name__ == "__main__":
             host=config.db_host, 
             port=config.db_port       
         )
-    for tournament_url in tournament_url_2023:
-        print(upload_betting_data_by_tournament(conn, tournament_url))
+    for tournament_url in tournament_urls_2024:
+        upload_betting_data_by_tournament(conn, tournament_url)
         print(tournament_url[0], "scraped")

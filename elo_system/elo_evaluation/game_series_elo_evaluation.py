@@ -1,5 +1,5 @@
 import psycopg2
-import config
+import common.config as config
 from itertools import combinations
 from elo_comparison import tournaments
 

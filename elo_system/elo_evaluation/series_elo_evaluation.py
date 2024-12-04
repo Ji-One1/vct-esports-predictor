@@ -1,5 +1,5 @@
 import psycopg2
-import config
+import common.config as config
 from sklearn.metrics import log_loss as sklog_loss
 from elo_comparison import tournaments
 

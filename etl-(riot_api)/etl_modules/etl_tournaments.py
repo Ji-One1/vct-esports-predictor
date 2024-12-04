@@ -1,7 +1,7 @@
 import pandas as pd
 from sqlalchemy import create_engine
 import json
-import config
+import common.config as config
 
 def etl_tournaments(db_username, db_password, db_host, db_port, db_name):
     with open('vct-international/esports-data/tournaments.json', encoding='utf-8') as f:

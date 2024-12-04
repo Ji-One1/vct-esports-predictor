@@ -1,5 +1,5 @@
 import pandas as pd
-import config
+import common.config as config
 from sqlalchemy import create_engine
 import json
 

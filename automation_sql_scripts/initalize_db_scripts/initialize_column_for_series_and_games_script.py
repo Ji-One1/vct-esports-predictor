@@ -1,5 +1,5 @@
 import psycopg2
-import config
+import common.config as config
 
 def init_elo_columns(conn):
 

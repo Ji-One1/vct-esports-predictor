@@ -1,5 +1,5 @@
 import psycopg2
-import config
+import common.config as config
 from initalize_db_scripts.create_betting_data_script import create_betting_data_table
 from initalize_db_scripts.init_team_data_columns_script import init_team_data
 from initalize_db_scripts.initialize_column_for_series_and_games_script import init_elo_columns
